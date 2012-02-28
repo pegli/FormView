@@ -53,7 +53,7 @@ class GroupedTableFormView
     result = Ti.UI.createTableView
       style: Ti.UI.iPhone.TableViewStyle.GROUPED
 
-    data = (@createSection section for section in sections)
+    data = (@createSection result, section for section in sections)
     result.setData data
 
     return result
@@ -77,17 +77,18 @@ class GroupedTableFormView
         
     TEXT:
       borderStyle: Ti.UI.INPUT_BORDERSTYLE_ROUNDED
+      clearButtonMode: Ti.UI.INPUT_BUTTONMODE_ONFOCUS
       keyboardType: Ti.UI.KEYBOARD_DEFAULT
       font:
         fontSize: '16dp'
 
   
-  createSection: (def) ->
+  createSection: (parent, def) ->
     result = Ti.UI.createTableViewSection
       headerTitle: def.title
       
     fields = def.fields or []
-    result.add @createFieldRow field for field in fields
+    result.add @createFieldRow parent, field for field in fields
     
     return result
   
@@ -107,8 +108,9 @@ class GroupedTableFormView
       setter def.value
 
 
-  createFieldRow: (def) ->
-    result = Ti.UI.createTableViewRow()
+  createFieldRow: (parent, def) ->
+    result = Ti.UI.createTableViewRow
+      eventTarget: parent
     
     input = switch def.type
       when FormView.fieldTypes.TEXT, FormView.fieldTypes.EMAIL, FormView.fieldTypes.PASSWORD, FormView.fieldTypes.NUMBER, FormView.fieldTypes.URL
@@ -136,7 +138,8 @@ class GroupedTableFormView
   Static text fields
   ###
   buildLabelInput: (def, row) ->
-    opts = merge @style.STATIC,
+    options = def.options or {}
+    opts = merge @style.STATIC, options,
       right: "#{@style.padding}%"
       top: "#{@style.padding}%"
       bottom: "#{@style.padding}%"
@@ -163,13 +166,20 @@ class GroupedTableFormView
 
 
   buildTextInput: (def, row) ->
-    opts = merge @style.TEXT,
+    options = def.options or {}
+    opts = merge @style.TEXT, options,
+      name: def.name
       left: "#{@style.padding}%"
       right: "#{@style.padding}%"
       top: "#{@style.padding}%"
       bottom: "#{@style.padding}%"
     result = Ti.UI.createTextField opts
     result.keyboardToolbar = @buildKeyboardToolbar result
+    result.addEventListener 'change', (e) ->
+      row.eventTarget.fireEvent 'FormView:change',
+        name: e.source.name
+        value: e.value
+        
     @fetchFieldValue def, result.setValue
 
     switch def.type

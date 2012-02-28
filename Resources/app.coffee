@@ -19,7 +19,7 @@ def = [
     title: 'Text'
     fields: [
       { name: 'text1', type: FormView.fieldTypes.TEXT, label: 'text', value: 'some freeform text' }
-      { name: 'text2', type: FormView.fieldTypes.TEXT, value: 'text without label' }
+      { name: 'text2', type: FormView.fieldTypes.TEXT, value: 'text without label', options: { autocapitalization: Ti.UI.TEXT_AUTOCAPITALIZATION_WORDS } }
       {
         name: 'text3', type: FormView.fieldTypes.TEXT, label: 'async', value: (cb) ->
           setTimeout(() ->
@@ -36,7 +36,8 @@ def = [
 ]
 
 form = new FormView def
-  
+form.addEventListener 'FormView:change', (e) ->
+  Ti.API.info "field #{e.name} changed to #{e.value}"
  
 win.add form
 win.open()
