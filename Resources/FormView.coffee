@@ -61,16 +61,26 @@ class GroupedTableFormView
   # default style mimics the Contacts app
   style:
     padding: 4
-    label:
-      width: 21
+    labelWidth: 21
+
+    LABEL:
+      textAlign: 'right'
       color: '#405080'
       font:
         fontSize: '12dp'
         fontWeight: 'bold'
-    value:
+    
+    STATIC:
       font:
         fontSize: '16dp'
         fontWeight: 'bold'
+        
+    TEXT:
+      borderStyle: Ti.UI.INPUT_BORDERSTYLE_ROUNDED
+      keyboardType: Ti.UI.KEYBOARD_DEFAULT
+      font:
+        fontSize: '16dp'
+
   
   createSection: (def) ->
     result = Ti.UI.createTableViewSection
@@ -107,16 +117,15 @@ class GroupedTableFormView
     
     left = parseInt @style.padding
     if def.label
-      result.add Ti.UI.createLabel
+      opts = merge @style.LABEL,
         left: "#{@style.padding}%"
-        width: "#{@style.label.width}%"
+        width: "#{@style.labelWidth}%"
         top: "#{@style.padding}%"
         bottom: "#{@style.padding}%"
         text: L def.label, def.label
-        font: @style.label.font
-        color: @style.label.color
-        textAlign: 'right'
-      left += @style.label.width + @style.padding
+
+      result.add Ti.UI.createLabel opts
+      left += @style.labelWidth + @style.padding
 
     input.left = "#{left}%"
     result.add input    
@@ -127,11 +136,11 @@ class GroupedTableFormView
   Static text fields
   ###
   buildLabelInput: (def, row) ->
-    result = Ti.UI.createLabel
+    opts = merge @style.STATIC,
       right: "#{@style.padding}%"
       top: "#{@style.padding}%"
       bottom: "#{@style.padding}%"
-      font: @style.value.font
+    result = Ti.UI.createLabel opts
     @fetchFieldValue def, result.setText
     result
   
@@ -154,15 +163,12 @@ class GroupedTableFormView
 
 
   buildTextInput: (def, row) ->
-    result = Ti.UI.createTextField
+    opts = merge @style.TEXT,
       left: "#{@style.padding}%"
       right: "#{@style.padding}%"
       top: "#{@style.padding}%"
       bottom: "#{@style.padding}%"
-      font: @style.value.font
-      borderStyle: Ti.UI.INPUT_BORDERSTYLE_ROUNDED
-      keyboardType: Ti.UI.KEYBOARD_DEFAULT
-    
+    result = Ti.UI.createTextField opts
     result.keyboardToolbar = @buildKeyboardToolbar result
     @fetchFieldValue def, result.setValue
 
@@ -176,7 +182,7 @@ class GroupedTableFormView
         result.keyboardType = Ti.UI.KEYBOARD_NUMBERS_PUNCTUATION
       when FormView.fieldTypes.URL
         result.keyboardType = Ti.UI.KEYBOARD_URL
-        
+
     result
    
 
