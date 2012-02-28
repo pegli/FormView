@@ -71,7 +71,6 @@ class GroupedTableFormView
       font:
         fontSize: '16dp'
         fontWeight: 'bold'
-        
   
   createSection: (def) ->
     result = Ti.UI.createTableViewSection
@@ -124,6 +123,9 @@ class GroupedTableFormView
     
     return result
   
+  ###
+  Static text fields
+  ###
   buildLabelInput: (def, row) ->
     result = Ti.UI.createLabel
       right: "#{@style.padding}%"
@@ -133,6 +135,24 @@ class GroupedTableFormView
     @fetchFieldValue def, result.setText
     result
   
+  ###
+  Single-line text entry fields
+  ###
+  
+  buildKeyboardToolbar: (textfield) ->
+    done = Ti.UI.createButton
+      systemButton: Ti.UI.iPhone.SystemButton.DONE
+      
+    done.addEventListener 'click', (e) ->
+      textfield.blur()
+    
+    spacer = Ti.UI.createButton
+      systemButton: Ti.UI.iPhone.SystemButton.FLEXIBLE_SPACE
+    
+    textfield._done_button_ref = done # WORKAROUND: TIMOB-5066
+    return [spacer, done]
+
+
   buildTextInput: (def, row) ->
     result = Ti.UI.createTextField
       left: "#{@style.padding}%"
@@ -143,8 +163,9 @@ class GroupedTableFormView
       borderStyle: Ti.UI.INPUT_BORDERSTYLE_ROUNDED
       keyboardType: Ti.UI.KEYBOARD_DEFAULT
     
+    result.keyboardToolbar = @buildKeyboardToolbar result
     @fetchFieldValue def, result.setValue
-    
+
     switch def.type
       when FormView.fieldTypes.PASSWORD
         result.passwordMask = true
