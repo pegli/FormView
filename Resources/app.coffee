@@ -5,6 +5,9 @@ win = Ti.UI.createWindow()
 
 def = [
   {
+    title: 'Empty Section'
+  }
+  {
     title: 'Strings'
     fields: [
       { name: 'string1', value: 'This is a plain string' }
