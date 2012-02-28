@@ -82,14 +82,21 @@ class GroupedTableFormView
     
     return result
   
-  fetchFieldValue: (def) ->
+  ###
+  Call the provided input control setter method with the value of
+  the field.  If def.value is a function, invoke that function, passing
+  the setter method as a callback; otherwise, invoke the setter with
+  the value of def.value.
+  ###
+  fetchFieldValue: (def, setter) ->
     if not def?.value
-      return null
+      setter null
       
     if typeof def.value == 'function'
-      return def.value()
+      def.value setter
     else
-      return def.value
+      setter def.value
+
 
   createFieldRow: (def) ->
     result = Ti.UI.createTableViewRow()
@@ -118,12 +125,13 @@ class GroupedTableFormView
     return result
   
   buildLabelInput: (def, row) ->
-    Ti.UI.createLabel
+    result = Ti.UI.createLabel
       right: "#{@style.padding}%"
       top: "#{@style.padding}%"
       bottom: "#{@style.padding}%"
       font: @style.value.font
-      text: @fetchFieldValue def
+    @fetchFieldValue def, result.setText
+    result
   
   buildTextInput: (def, row) ->
     result = Ti.UI.createTextField
@@ -134,7 +142,8 @@ class GroupedTableFormView
       font: @style.value.font
       borderStyle: Ti.UI.INPUT_BORDERSTYLE_ROUNDED
       keyboardType: Ti.UI.KEYBOARD_DEFAULT
-      value: @fetchFieldValue def
+    
+    @fetchFieldValue def, result.setValue
     
     switch def.type
       when FormView.fieldTypes.PASSWORD
