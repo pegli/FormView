@@ -30,6 +30,7 @@ def = [
       { name: 'text4', type: FormView.fieldTypes.EMAIL, label: 'email', value: 'user@example.com' }
       { name: 'text5', type: FormView.fieldTypes.PASSWORD, label: 'password' }
       { name: 'text6', type: FormView.fieldTypes.NUMBER, label: 'number', value: 1 }
+      { name: 'text7', type: FormView.fieldTypes.URL, label: 'url', value: 'http://www.example.com/' }
     ]
   }
 ]
