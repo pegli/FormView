@@ -19,6 +19,13 @@ merge = (sources...) ->
       else
         object[key] = merge object[key], val
   object
+  
+nested_value = (dict, key) ->
+  v = dict
+  for i in key.split '.'
+    if v 
+      v = v[i]
+  return v
 
 
 class FormView
@@ -31,10 +38,9 @@ class FormView
       result = new GroupedTableFormView(sections)
 
     result.populate = (model) ->
-      # TODO dot-notation for keys
       for k of result.setterMap
         s = result.setterMap[k]
-        v = model[k]
+        v = nested_value(model, k)
         if s and v
           if v instanceof Function
             v(s)

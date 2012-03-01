@@ -14,6 +14,7 @@ def = [
       { key: 'string2', label: 'string', type: FormView.fieldTypes.STATIC }
       { key: 'string3', label: 'string from fn' }
       { key: 'string4', label: 'string_label' }
+      { key: 'string5.sub1.sub2', label: 'dot notation' }
     ]
   }
   {
@@ -45,6 +46,9 @@ model =
   string3: (cb) ->
     cb(String.formatDate(new Date(), 'short'))
   string4: 'localized label'
+  string5:
+    sub1:
+      sub2: 'dot notation string'
   
   text1: 'some freeform text'
   text2: 'text without label'
