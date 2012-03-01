@@ -5,13 +5,8 @@ $Id$
 Cross-platform data form view
 ###
 
-###
-[
-  { title: 'General', fields: [ { label: 'type', type: 'select' } ] }
-]
-###
-
 is_android = Ti.Platform.osname == 'android'
+PickerWindow = require './PickerWindow'
 
 ###
 ###
@@ -26,7 +21,6 @@ merge = (sources...) ->
   object
 
 
-
 class FormView
   constructor: (sections) ->
     sections or= []
@@ -36,16 +30,42 @@ class FormView
     else
       result = new GroupedTableFormView(sections)
 
+    result.populate = (model) ->
+      # TODO dot-notation for keys
+      for k of result.setterMap
+        s = result.setterMap[k]
+        v = model[k]
+        if s and v
+          if v instanceof Function
+            v(s)
+          else
+            s(v)
+
     return result
   
-  @fieldTypes:
-    STATIC: 1
-    TEXT: 2
-    EMAIL: 3
-    PASSWORD: 4
-    NUMBER: 5
-    URL: 6
+  @fieldTypes: {}
+  
+  @keyboardMap: {}
+
+  
+# static initialization of FormView class members
+  
+FormView.fieldTypes =   
+  STATIC: 1
+  TEXT: 2
+  EMAIL: 3
+  PASSWORD: 4
+  NUMBER: 5
+  URL: 6
+  DATE: 7
+  TIME: 8
+  DATETIME: 9
     
+FormView.keyboardMap[FormView.fieldTypes.TEXT] = Ti.UI.KEYBOARD_DEFAULT
+FormView.keyboardMap[FormView.fieldTypes.EMAIL] = Ti.UI.KEYBOARD_EMAIL
+FormView.keyboardMap[FormView.fieldTypes.PASSWORD] = Ti.UI.KEYBOARD_DEFAULT
+FormView.keyboardMap[FormView.fieldTypes.NUMBER] = Ti.UI.KEYBOARD_NUMBERS_PUNCTUATION
+FormView.keyboardMap[FormView.fieldTypes.URL] = Ti.UI.KEYBOARD_URL
 
 
 class GroupedTableFormView
@@ -53,6 +73,13 @@ class GroupedTableFormView
     result = Ti.UI.createTableView
       style: Ti.UI.iPhone.TableViewStyle.GROUPED
 
+    result.setterMap = {}
+    result.addSetter = (k, v) ->
+      if k and v
+        m = result.setterMap
+        m[k] = v
+        result.setterMap = m
+      
     data = (@createSection result, section for section in sections)
     result.setData data
 
@@ -92,30 +119,20 @@ class GroupedTableFormView
     
     return result
   
-  ###
-  Call the provided input control setter method with the value of
-  the field.  If def.value is a function, invoke that function, passing
-  the setter method as a callback; otherwise, invoke the setter with
-  the value of def.value.
-  ###
-  fetchFieldValue: (def, setter) ->
-    if not def?.value
-      setter null
-      
-    if typeof def.value == 'function'
-      def.value setter
-    else
-      setter def.value
-
-
   createFieldRow: (parent, def) ->
+    if not def.key
+      throw "missing required property 'key' in field definition: #{def}"
+      
     result = Ti.UI.createTableViewRow
       eventTarget: parent
     
-    input = switch def.type
+    [control, setter] = switch def.type
       when FormView.fieldTypes.TEXT, FormView.fieldTypes.EMAIL, FormView.fieldTypes.PASSWORD, FormView.fieldTypes.NUMBER, FormView.fieldTypes.URL
         @buildTextInput def, result
-      else @buildLabelInput def, result
+      when FormView.fieldTypes.DATE, FormView.fieldTypes.TIME, FormView.fieldTypes.DATETIME
+        @buildPickerInput def, result
+      else
+        @buildLabelInput def, result
     
     left = parseInt @style.padding
     if def.label
@@ -129,8 +146,10 @@ class GroupedTableFormView
       result.add Ti.UI.createLabel opts
       left += @style.labelWidth + @style.padding
 
-    input.left = "#{left}%"
-    result.add input    
+    control.left = "#{left}%"
+
+    parent.addSetter(def.key, setter)
+    result.add control
     
     return result
   
@@ -144,8 +163,11 @@ class GroupedTableFormView
       top: "#{@style.padding}%"
       bottom: "#{@style.padding}%"
     result = Ti.UI.createLabel opts
-    @fetchFieldValue def, result.setText
-    result
+    
+    setter = (v) ->
+      result.text = if def.formatter then def.formatter(v) else v
+      
+    [result, setter]
   
   ###
   Single-line text entry fields
@@ -174,26 +196,30 @@ class GroupedTableFormView
       top: "#{@style.padding}%"
       bottom: "#{@style.padding}%"
     result = Ti.UI.createTextField opts
-    result.keyboardToolbar = @buildKeyboardToolbar result
+    result.keyboardType or= FormView.keyboardMap[def.type]
+    result.keyboardToolbar or= @buildKeyboardToolbar result
     result.addEventListener 'change', (e) ->
       row.eventTarget.fireEvent 'FormView:change',
         name: e.source.name
         value: e.value
-        
-    @fetchFieldValue def, result.setValue
 
     switch def.type
       when FormView.fieldTypes.PASSWORD
         result.passwordMask = true
-        result.keyboardType = Ti.UI.KEYBOARD_DEFAULT
-      when FormView.fieldTypes.EMAIL
-        result.keyboardType = Ti.UI.KEYBOARD_EMAIL
-      when FormView.fieldTypes.NUMBER
-        result.keyboardType = Ti.UI.KEYBOARD_NUMBERS_PUNCTUATION
-      when FormView.fieldTypes.URL
-        result.keyboardType = Ti.UI.KEYBOARD_URL
 
-    result
+    setter = (v) ->
+      result.value = if def.formatter then def.formatter(v) else v
+
+    [result, setter]
+  
+  ###
+  Date picker drawers
+  ###
+  
+  buildPickerInput: (def, row) ->
+    [result, setter] = @buildLabelInput def, row
+    [result, null]
+    
    
 
 

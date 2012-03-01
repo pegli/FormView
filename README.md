@@ -41,12 +41,12 @@ A form field is a single input control and optional label.
     <th>description</th>
   </tr>
   <tr>
-    <td>name</td>
+    <td>key</td>
     <td>String</td>
-    <td>no</td>
+    <td>yes</td>
     <td>
       The name of the input value for this field.  This string is provided in the change
-      event along with the updated field value.
+      event along with the updated field value. 
     </td>
   </tr>
   <tr>
@@ -56,13 +56,12 @@ A form field is a single input control and optional label.
     <td>A string describing the field which will be displayed to the left of the field.</td>
   </tr>
   <tr>
-    <td>value</td>
-    <td>String or Function</td>
+    <td>formatter</td>
+    <td>Function</td>
     <td>no</td>
     <td>
-      The initial value to display in the field control.  Field values can be set asynchronously
-      by passing a function for the value instead of a string.  This function should have a single
-      parameter, which is a callback to set the field control value.
+      Function which converts the model value to a string for display.  The function should take
+      the "native" data format as a parameter and return a string.
     </td>
   </tr>
   <tr>
@@ -74,3 +73,8 @@ A form field is a single input control and optional label.
     </td>
   </tr>
 </table>
+
+## Data Model
+
+The data model is a dictionary that is passed to the populate() method of the FormView to
+place data into the form.  The dictionary values can be strings, numbers, or functions.
