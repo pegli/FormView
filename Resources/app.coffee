@@ -34,7 +34,10 @@ def = [
     fields: [
       { key: 'picker1', type: FormView.fieldTypes.DATE, label: 'date', dateFormat: 'short' }
       { key: 'picker2', type: FormView.fieldTypes.TIME, label: 'time' }
-      { key: 'picker3', type: FormView.fieldTypes.DATETIME, label: 'date and time' }
+      { key: 'picker3', type: FormView.fieldTypes.DATETIME, label: 'date and time', dateFormat: 'medium' }
+      { key: 'picker4', type: FormView.fieldTypes.PICKER, label: 'picker', values: [
+        'apple', 'banana', 'cantaloupe', 'darian', 'fig', 'guava', 'jackfruit', 'kiwi', 'lemon', 'mango', 'orange', 'papaya', 'ugli'
+      ]}
     ]
   }
 ]

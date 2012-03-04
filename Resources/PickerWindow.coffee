@@ -11,13 +11,14 @@ For now, only supports a single column for non-datetime pickers.
 class PickerWindow
   constructor: (options) ->
     options or= {}
-    type = options.type or Ti.UI.PICKER_TYPE_PLAIN
+    if isNaN(options.type) then options.type = Ti.UI.PICKER_TYPE_PLAIN
     
     # ANDROID: call picker.showDatePickerDialog for dates
     # or set useSpinner = true to enable non-native spinner control
     
     result = Ti.UI.createWindow
       backgroundColor: 'transparent'
+      navBarHidden: true
     
     overlay = Ti.UI.createView
       backgroundColor: 'black'
@@ -29,27 +30,40 @@ class PickerWindow
       height: 'auto'
     
     picker = Ti.UI.createPicker
-      type: type
+      type: options.type
       height: 'auto'
       selectionIndicator: true
     
-    switch type
-      when Ti.UI.PICKER_TYPE_DATE, Ti.UI.PICKER_TYPE_TIME, Ti.UI.PICKER_TYPE_DATE_AND_TIME 
+    switch options.type
+      when Ti.UI.PICKER_TYPE_DATE, Ti.UI.PICKER_TYPE_DATE_AND_TIME, Ti.UI.PICKER_TYPE_TIME 
         picker.minDate = options.minDate
         picker.maxDate = options.maxDate
-        picker.value = options.value or new Date()
+        result.populate = (v) ->
+          picker.value = v
       else
-        data = for row in options.rows
-          opts = if row instanceof String
+        rows = options.rows or []
+        col = Ti.UI.createPickerColumn()
+        for row in rows
+          opts = if typeof row == 'string'
             title: row
           else row
-          Ti.UI.createTableViewRow opts
+          Ti.API.info JSON.stringify opts
+          col.addRow(Ti.UI.createPickerRow opts)
+        picker.add [col]
+        
+        result.populate = (v) ->
+          lv = L v
+          rows = picker.columns[0].rows
+          for i in [0..rows.length]
+            if lv == rows[i].title
+              picker.setSelectedRow i
+              break
     
     done = Ti.UI.createButton
       title: L 'PickerWindow_done', 'Done'
     done.addEventListener 'click', (e) ->
       result.fireEvent 'PickerWindow:change',
-        value: picker.value or picker.getSelectedRow(0).title
+        value: L picker.value or picker.getSelectedRow(0).title
       result.close()
     
     cancel = Ti.UI.createButton
@@ -63,6 +77,7 @@ class PickerWindow
       spacer = Ti.UI.createButton
         systemButton: Ti.UI.iPhone.SystemButton.FLEXIBLE_SPACE
       Ti.UI.iOS.createToolbar
+        height: '36dp'
         items: [cancel, spacer, done]
     
     container.add toolbar

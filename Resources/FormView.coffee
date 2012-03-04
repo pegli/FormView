@@ -46,7 +46,7 @@ class FormView
             v(s)
           else
             s(v)
-
+            
     return result
   
   @fieldTypes: {}
@@ -66,6 +66,8 @@ FormView.fieldTypes =
   DATE: 7
   TIME: 8
   DATETIME: 9
+  PICKER: 10
+  LIST: 11
     
 FormView.keyboardMap[FormView.fieldTypes.TEXT] = Ti.UI.KEYBOARD_DEFAULT
 FormView.keyboardMap[FormView.fieldTypes.EMAIL] = Ti.UI.KEYBOARD_EMAIL
@@ -135,7 +137,7 @@ class GroupedTableFormView
     [control, setter] = switch def.type
       when FormView.fieldTypes.TEXT, FormView.fieldTypes.EMAIL, FormView.fieldTypes.PASSWORD, FormView.fieldTypes.NUMBER, FormView.fieldTypes.URL
         @buildTextInput def, result
-      when FormView.fieldTypes.DATE, FormView.fieldTypes.TIME, FormView.fieldTypes.DATETIME
+      when FormView.fieldTypes.DATE, FormView.fieldTypes.TIME, FormView.fieldTypes.DATETIME, FormView.fieldTypes.PICKER
         @buildPickerInput def, result
       else
         @buildLabelInput def, result
@@ -196,7 +198,6 @@ class GroupedTableFormView
   buildTextInput: (def, row) ->
     options = def.options or {}
     opts = merge @style.TEXT, options,
-      name: def.name
       left: "#{@style.padding}%"
       right: "#{@style.padding}%"
       top: "#{@style.padding}%"
@@ -206,7 +207,7 @@ class GroupedTableFormView
     result.keyboardToolbar or= @buildKeyboardToolbar result
     result.addEventListener 'change', (e) ->
       row.eventTarget.fireEvent 'FormView:change',
-        name: e.source.name
+        name: def.key
         value: e.value
 
     switch def.type
@@ -223,8 +224,40 @@ class GroupedTableFormView
   ###
   
   buildPickerInput: (def, row) ->
-    [result, setter] = @buildLabelInput def, row
-    [result, null]
+    pickerType = switch def.type
+      when FormView.fieldTypes.DATE
+        Ti.UI.PICKER_TYPE_DATE
+      when FormView.fieldTypes.TIME
+        Ti.UI.PICKER_TYPE_TIME
+      when FormView.fieldTypes.DATETIME
+        Ti.UI.PICKER_TYPE_DATE_AND_TIME
+      else
+        Ti.UI.PICKER_TYPE_PLAIN
+        
+    [result, _] = @buildLabelInput def, row
+    
+    # set up event handler for picker
+    row.hasChild = true
+    row.pickerWin = new PickerWindow
+      type: pickerType
+      rows: def.values
+
+    row.pickerWin.addEventListener 'PickerWindow:change', (e) ->
+      row.eventTarget.fireEvent 'FormView:change',
+        name: def.key
+        value: e.value
+
+    row.addEventListener 'click', (e) ->
+      row.pickerWin.open({ modal: true })
+
+    setter = (v) ->
+      result.text = if def.formatter then def.formatter(v)
+      else if def.dateFormat then String.formatDate(v, def.dateFormat) 
+      else v
+        
+      row.pickerWin.populate(v)
+
+    [result, setter]
     
    
 
