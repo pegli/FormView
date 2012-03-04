@@ -67,6 +67,7 @@ model =
   picker1: new Date(2012, 4, 14)
   picker2: new Date(2012, 4, 14, 10, 12)
   picker3: new Date()
+  picker4: 'banana'
 
 form = new FormView def
 form.addEventListener 'FormView:change', (e) ->

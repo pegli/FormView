@@ -243,6 +243,7 @@ class GroupedTableFormView
       rows: def.values
 
     row.pickerWin.addEventListener 'PickerWindow:change', (e) ->
+      setter e.value
       row.eventTarget.fireEvent 'FormView:change',
         name: def.key
         value: e.value
@@ -251,11 +252,11 @@ class GroupedTableFormView
       row.pickerWin.open({ modal: true })
 
     setter = (v) ->
+      row.pickerWin.populate v
       result.text = if def.formatter then def.formatter(v)
       else if def.dateFormat then String.formatDate(v, def.dateFormat) 
       else v
-        
-      row.pickerWin.populate(v)
+
 
     [result, setter]
     

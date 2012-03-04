@@ -40,6 +40,7 @@ class PickerWindow
         picker.maxDate = options.maxDate
         result.populate = (v) ->
           picker.value = v
+        
       else
         rows = options.rows or []
         col = Ti.UI.createPickerColumn()
@@ -47,17 +48,21 @@ class PickerWindow
           opts = if typeof row == 'string'
             title: row
           else row
-          Ti.API.info JSON.stringify opts
           col.addRow(Ti.UI.createPickerRow opts)
         picker.add [col]
         
         result.populate = (v) ->
-          lv = L v
+          lv = L v, v
           rows = picker.columns[0].rows
           for i in [0..rows.length]
             if lv == rows[i].title
-              picker.setSelectedRow i
+              result.selectedRow = i
               break
+    
+    result.addEventListener 'open', (e) ->
+      # on iOS, setSelectedRow can only be called after the picker is rendered
+      if result.selectedRow
+        picker.setSelectedRow 0, result.selectedRow, true
     
     done = Ti.UI.createButton
       title: L 'PickerWindow_done', 'Done'
