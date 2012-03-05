@@ -40,6 +40,19 @@ def = [
       ]}
     ]
   }
+  {
+    title: 'Sliders'
+    fields: [
+      { key: 'slider1', type: FormView.fieldTypes.SLIDER, label: 'slider' }
+      { key: 'slider2', type: FormView.fieldTypes.SLIDER, label: 'min/max', min: -5, max: 5, snapToInt: true }
+    ]
+  }
+  {
+    title: 'Switches'
+    fields: [
+      { key: 'switch1', type: FormView.fieldTypes.SWITCH, label: 'enabled' }
+    ]
+  }
 ]
 
 
@@ -68,6 +81,11 @@ model =
   picker2: new Date(2012, 4, 14, 10, 12)
   picker3: new Date()
   picker4: 'banana'
+
+  slider1: 0.5
+  slider2: 0
+
+  switch1: true
 
 form = new FormView def
 form.addEventListener 'FormView:change', (e) ->

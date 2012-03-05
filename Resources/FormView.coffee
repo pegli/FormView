@@ -68,6 +68,8 @@ FormView.fieldTypes =
   DATETIME: 9
   PICKER: 10
   LIST: 11
+  SLIDER: 12
+  SWITCH: 13
     
 FormView.keyboardMap[FormView.fieldTypes.TEXT] = Ti.UI.KEYBOARD_DEFAULT
 FormView.keyboardMap[FormView.fieldTypes.EMAIL] = Ti.UI.KEYBOARD_EMAIL
@@ -76,6 +78,9 @@ FormView.keyboardMap[FormView.fieldTypes.NUMBER] = Ti.UI.KEYBOARD_NUMBERS_PUNCTU
 FormView.keyboardMap[FormView.fieldTypes.URL] = Ti.UI.KEYBOARD_URL
 
 
+###
+iOS form control
+###
 class GroupedTableFormView
   constructor: (sections) ->
     result = Ti.UI.createTableView
@@ -116,7 +121,10 @@ class GroupedTableFormView
       keyboardType: Ti.UI.KEYBOARD_DEFAULT
       font:
         fontSize: '16dp'
-
+    
+    SLIDER: {}
+    
+    SWITCH: {}
   
   createSection: (parent, def) ->
     result = Ti.UI.createTableViewSection
@@ -139,6 +147,11 @@ class GroupedTableFormView
         @buildTextInput def, result
       when FormView.fieldTypes.DATE, FormView.fieldTypes.TIME, FormView.fieldTypes.DATETIME, FormView.fieldTypes.PICKER
         @buildPickerInput def, result
+      # TODO lists
+      when FormView.fieldTypes.SLIDER
+        @buildSliderInput def, result
+      when FormView.fieldTypes.SWITCH
+        @buildSwitchInput def, result
       else
         @buildLabelInput def, result
     
@@ -257,9 +270,57 @@ class GroupedTableFormView
       else if def.dateFormat then String.formatDate(v, def.dateFormat) 
       else v
 
+    [result, setter]
 
+
+  buildSliderInput: (def, row) ->
+    options = def.options or {}
+    opts = merge @style.SLIDER, options,
+      right: "#{@style.padding}%"
+      top: "#{@style.padding}%"
+      bottom: "#{@style.padding}%"
+    result = Ti.UI.createSlider opts
+    
+    result.min = def.min or 0
+    result.max = def.max or 1
+    
+    result.snapToInt = def.snapToInt
+    
+    # TODO maybe add an optional value display?
+    
+    result.addEventListener 'touchend', (e) ->
+      val = e.value
+      if e.source.snapToInt
+        val = Math.round val
+        e.source.value = val
+        
+      row.eventTarget.fireEvent 'FormView:change',
+        name: def.key
+        value: val
+      
+    
+    setter = (v) ->
+      result.value = parseFloat(v)
+      
     [result, setter]
     
+  buildSwitchInput: (def, row) ->
+    options = def.options or {}
+    opts = merge @style.SLIDER, options,
+      right: "#{@style.padding}%"
+      top: "#{@style.padding}%"
+      bottom: "#{@style.padding}%"
+    result = Ti.UI.createSwitch opts
+    
+    result.addEventListener 'change', (e) ->
+      row.eventTarget.fireEvent 'FormView:change',
+        name: def.key
+        value: e.value
+
+    setter = (v) ->
+      result.value = v
+    
+    [result, setter]      
    
 
 
